@@ -1,4 +1,4 @@
 package org.drrandom.tranquility
 
-case class Delete(override val url:String) extends Request {
+case class Delete(override var url:String) extends Request {
 }

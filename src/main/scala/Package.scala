@@ -1,21 +1,52 @@
 package org.drrandom
 
+import org.apache.http.entity._
 import org.apache.http.client.methods._
 
 package object tranquility {
-	//implicit def reqToExtCons[T <: List[RequestExtension]](r:T):RequestExtCons = new RequestExtCons(r)
 	implicit def reqExtToSeq[T <: RequestExtension](r:T):RequestExtensionList = new RequestExtensionList(r)
-	//implicit def extractRequestFromSeq[T <: List[U,_],U <: Reqest](l:T):Request = l.head
 	
 	// Some magik to convert to the Apache HttpClient types
-	implicit def requestToMethod[T <: Request](r:T):RequestToMethod = new RequestToMethod(r)
-	implicit def requestWithBodyToMethod[T[x] <: RequestWithBody[x],U](r:T[U]) = new RequestWithBodyToMethod[U](r)
+	implicit def requestWithBodyToMethod[T](r:RequestWithBody[T]) = new RequestWithBodyToMethod[T](r)
+	implicit def requestToMethod(r:Request):RequestToMethod = new RequestToMethod(r)
+	
+	implicit def jsonElementConst(first:(String,String)):JsonElementCons = new JsonElementCons(first)
+
+	def json(pairs:Seq[(String,String)]):String = {
+		"{" + pairs.map(pair => "\"" + pair._1 + "\":\"" + pair._2 + "\"").reduceLeft(_ + "," + _) + "}"
+	}
+
+	def json(pairs:(String,String)):String = {
+		"{\""+pairs._1+"\":\""+pairs._2+"\"}"
+	}
+
+	final class JsonElementCons(first:(String,String)) {
+		def ~(second:(String,String)):Seq[(String,String)] = {
+			Seq(first,second)
+		}
+	}
 	
 	final class RequestWithBodyToMethod[T](r:RequestWithBody[T]) {
 		def getMethod():HttpUriRequest = {
 			r match {
-				case x:Put[T] => new HttpPut(x.url)
-				case x:Post[T] => new HttpPost(x.url)
+				case x:Put[T] => {
+					val put = new HttpPut(x.url)
+					r.body match {
+						case b:String => put.setEntity(new StringEntity(b))
+						case b:Array[Byte] => put.setEntity(new ByteArrayEntity(b))
+						case _ => throw new IllegalStateException("Unknown entity type: "+r.body.getClass)
+					}
+					put
+				}	
+				case x:Post[T] =>{
+					val post = new HttpPost(x.url)
+					r.body match {
+						case b:String => post.setEntity(new StringEntity(b))
+						case b:Array[Byte] => post.setEntity(new ByteArrayEntity(b))
+						case _ => throw new IllegalStateException("Unknown entity type: "+r.body.getClass)
+					}
+					post
+				} 
 			}
 		}
 	}
@@ -26,13 +57,6 @@ package object tranquility {
 				case x:Get => new HttpGet(x.url)
 				case x:Delete => new HttpDelete(x.url)
 			}
-		}
-	}
-
-	final class RequestExtCons(rEx:List[RequestExtension]) {
-		def ::(r:Request):Request = {
-			r.extensions = rEx
-			r
 		}
 	}
 

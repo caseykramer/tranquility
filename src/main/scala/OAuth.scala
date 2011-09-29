@@ -1,5 +1,7 @@
 package org.drrandom.tranquility
 
+import java.net.{URL,URLEncoder}
+
 class OAuth(key:String) extends RequestExtension {
 	override def preProcess(r:Request) {
 		val value = "OAuth "+key

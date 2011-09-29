@@ -5,11 +5,12 @@ import org.apache.http._
 import org.apache.http.util._
 import org.apache.http.client._
 import org.apache.http.impl.client._
+import org.apache.http.client.methods._
 import org.apache.http.impl.cookie.DateUtils
 
 
 trait Request {
-	val url:String = ""
+	var _url:String = ""
 
 	var extensions:List[RequestExtension] = List[RequestExtension]()
 
@@ -18,12 +19,15 @@ trait Request {
 	var _preprocessors:List[Request => Unit] = List[Request=>Unit]()
 	var _postprocessors:List[Request => Unit] = List[Request=>Unit]()
 
+	def url_=(u:String) { _url = u}
+	def url :String = _url
+
 	def -> :Response = {
 		val client = new DefaultHttpClient()
 		extensions.foreach(ex => ex.preProcess(this))
 		println(headers.map(kv => kv._1 + " -> " + kv._2).reduceLeft(_ + ", " + _))
 		val handler = new ReceievedResponseHandler()
-		val method = this.getMethod
+		val method = this.toMethod
 		try {
 			headers.foreach(kv => method.addHeader(kv._1,kv._2))
 			val response = client.execute(method)
@@ -32,6 +36,8 @@ trait Request {
 			case x => ErrorResult(x)
 		}
 	}
+
+	protected def toMethod():HttpUriRequest = this.getMethod
 
 	private[tranquility] def url_=():String = this.url
 }
@@ -50,6 +56,8 @@ class ReceievedResponseHandler {
 
 trait RequestWithBody[T] extends Request {
 	val body:T
+
+	override def toMethod():HttpUriRequest = this.getMethod
 }
 
 trait RequestExtension {

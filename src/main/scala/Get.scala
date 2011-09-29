@@ -1,4 +1,4 @@
 package org.drrandom.tranquility
 
-case class Get(override val url:String) extends Request {
+case class Get(override var url:String) extends Request {
 }
