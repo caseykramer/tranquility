@@ -17,3 +17,5 @@ case class Received(code:Int,status:String) extends Response {}
 object is {
 	def unapply(r:Received):Option[(Received,Int)] = Some((r,r.code))
 }
+
+case class ErrorResult(x:Throwable) extends Response

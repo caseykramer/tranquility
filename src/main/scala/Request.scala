@@ -1,9 +1,11 @@
 package org.drrandom.tranquility
 
+import java.util.Date
 import org.apache.http._
 import org.apache.http.util._
 import org.apache.http.client._
 import org.apache.http.impl.client._
+import org.apache.http.impl.cookie.DateUtils
 
 
 trait Request {
@@ -11,7 +13,7 @@ trait Request {
 
 	var extensions:List[RequestExtension] = List[RequestExtension]()
 
-	var headers:Map[String,String] = Map.empty[String,String]
+	var headers:Map[String,String] = Map("Content-Type" -> "text/xml", "Date" -> DateUtils.formatDate(new Date()))
 
 	var _preprocessors:List[Request => Unit] = List[Request=>Unit]()
 	var _postprocessors:List[Request => Unit] = List[Request=>Unit]()
@@ -22,9 +24,13 @@ trait Request {
 		println(headers.map(kv => kv._1 + " -> " + kv._2).reduceLeft(_ + ", " + _))
 		val handler = new ReceievedResponseHandler()
 		val method = this.getMethod
-		headers.foreach(kv => method.addHeader(kv._1,kv._2))
-		val response = client.execute(method)
-		handler.handleResponse(response)
+		try {
+			headers.foreach(kv => method.addHeader(kv._1,kv._2))
+			val response = client.execute(method)
+			handler.handleResponse(response)
+		} catch {
+			case x => ErrorResult(x)
+		}
 	}
 
 	private[tranquility] def url_=():String = this.url
