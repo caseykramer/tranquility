@@ -3,16 +3,14 @@ package org.drrandom
 import org.apache.http.client.methods._
 
 package object tranquility {
-	implicit def reqExtToCons[T <: RequestExtension](r:T):RequestExtCons = new RequestExtCons(r)
-	implicit def reqExtToExtCons[T <: RequestExtension](r:T):RequestExtToReqestExtCons = new RequestExtToReqestExtCons(r)
-
+	//implicit def reqToExtCons[T <: List[RequestExtension]](r:T):RequestExtCons = new RequestExtCons(r)
+	implicit def reqExtToSeq[T <: RequestExtension](r:T):RequestExtensionList = new RequestExtensionList(r)
+	//implicit def extractRequestFromSeq[T <: List[U,_],U <: Reqest](l:T):Request = l.head
+	
 	// Some magik to convert to the Apache HttpClient types
 	implicit def requestToMethod[T <: Request](r:T):RequestToMethod = new RequestToMethod(r)
 	implicit def requestWithBodyToMethod[T[x] <: RequestWithBody[x],U](r:T[U]) = new RequestWithBodyToMethod[U](r)
-
-	// For pattern matching results
-	implicit def resultToInt(r:Received):Int = r.code
-
+	
 	final class RequestWithBodyToMethod[T](r:RequestWithBody[T]) {
 		def getMethod():HttpUriRequest = {
 			r match {
@@ -31,17 +29,24 @@ package object tranquility {
 		}
 	}
 
-	final class RequestExtCons(r:RequestExtension) {
-		def ::(req:Request):Request = {
-			r.request = req
-			req
+	final class RequestExtCons(rEx:List[RequestExtension]) {
+		def ::(r:Request):Request = {
+			r.extensions = rEx
+			r
 		}
 	}
 
-	final class RequestExtToReqestExtCons(r:RequestExtension) {
-		def ::(rex:RequestExtension):RequestExtension = {
-			rex.request = (r.request)
-			r
+	final class RequestExtensionList(r:RequestExtension) {
+		var extensions = List(r)
+
+		def ::(rEx:RequestExtension):RequestExtensionList = {
+			extensions = extensions :+ rEx
+			this
+		}
+
+		def ::(r:Request):Request = {
+			r.extensions = extensions
+			r	
 		}
 	}
 }
