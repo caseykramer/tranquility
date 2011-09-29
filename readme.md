@@ -1,5 +1,5 @@
-## Tranquility
-## A Peaceful REST client for Scala
+## Tranquility - A Peaceful REST client for Scala
+
 ***
 
 You know, cUrl is ok...particularly if you don't mind copying commands from a text editor and pasting them into your console.  But sometimes you want something more.  The goal of this project for me was to try and make a highly usable REST client that would allow for quick and easy testing, and hopefully even easy integration into other projects.
