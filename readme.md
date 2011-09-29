@@ -1,4 +1,4 @@
-# Tranquility
+## Tranquility
 ## A Peaceful REST client for Scala
 ***
 
