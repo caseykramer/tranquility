@@ -30,22 +30,24 @@ trait Request {
 		val method = this.toMethod
 		try {
 			headers.foreach(kv => method.addHeader(kv._1,kv._2))
-			val response = client.execute(method)
-			handler.handleResponse(response)
+			val (response,time) = withTimer(() => client.execute(method))
+			handler.handleResponse(response,time)
 		} catch {
 			case x => ErrorResult(x)
 		}
 	}
 
+	// needed this to help the implict along...
 	protected def toMethod():HttpUriRequest = this.getMethod
 
 	private[tranquility] def url_=():String = this.url
 }
 
 class ReceievedResponseHandler {
-	def handleResponse(response:HttpResponse):Received = {
+	def handleResponse(response:HttpResponse,time:Long):Received = {
 		val statusLine = response.getStatusLine
 		var received = new Received(statusLine.getStatusCode,statusLine.getReasonPhrase)
+		received.setTime(time)
 		received.setHeaders(Map(response.getAllHeaders.map(h => h.getName -> h.getValue):_*))
 		var entity = response.getEntity()
 		if(entity != null)
@@ -57,6 +59,7 @@ class ReceievedResponseHandler {
 trait RequestWithBody[T] extends Request {
 	val body:T
 
+	// needed this to help the implict along...
 	override def toMethod():HttpUriRequest = this.getMethod
 }
 

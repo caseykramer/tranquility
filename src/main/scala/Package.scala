@@ -12,6 +12,13 @@ package object tranquility {
 	
 	implicit def jsonElementConst(first:(String,String)):JsonElementCons = new JsonElementCons(first)
 
+	def withTimer[T](action:() => T):(T,Long) = {
+		val start = System.currentTimeMillis()
+		val result = action()
+		val end = System.currentTimeMillis()
+		(result,end - start)
+	}
+
 	def json(pairs:Seq[(String,String)]):String = {
 		"{" + pairs.map(pair => "\"" + pair._1 + "\":\"" + pair._2 + "\"").reduceLeft(_ + "," + _) + "}"
 	}
