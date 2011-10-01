@@ -10,8 +10,7 @@ package object tranquility {
 	implicit def requestWithBodyToMethod[T](r:RequestWithBody[T]) = new RequestWithBodyToMethod[T](r)
 	implicit def requestToMethod(r:Request):RequestToMethod = new RequestToMethod(r)
 	
-	implicit def jsonElementConst(first:(String,String)):JsonElementCons = new JsonElementCons(first)
-
+	
 	def withTimer[T](action:() => T):(T,Long) = {
 		val start = System.currentTimeMillis()
 		val result = action()
@@ -19,20 +18,6 @@ package object tranquility {
 		(result,end - start)
 	}
 
-	def json(pairs:Seq[(String,String)]):String = {
-		"{" + pairs.map(pair => "\"" + pair._1 + "\":\"" + pair._2 + "\"").reduceLeft(_ + "," + _) + "}"
-	}
-
-	def json(pairs:(String,String)):String = {
-		"{\""+pairs._1+"\":\""+pairs._2+"\"}"
-	}
-
-	final class JsonElementCons(first:(String,String)) {
-		def ~(second:(String,String)):Seq[(String,String)] = {
-			Seq(first,second)
-		}
-	}
-	
 	final class RequestWithBodyToMethod[T](r:RequestWithBody[T]) {
 		def getMethod():HttpUriRequest = {
 			r match {
